@@ -1,0 +1,7 @@
+Opened **#191** to upstream the testing methodology, reproducible diagnostic tools and results behind [the measurements above](https://github.com/tobagin/karere/issues/173#issuecomment-5856247793).
+
+The PR adds an isolated generated-page scroll workload, an optional real chat-list test, CEF pump/scheduling probes, a capture/analyzer workflow, setup instructions and nine aggregate result sets. The tests use fixed warmup/measurement intervals, retain the same geometry, and compare CPU → GPU → CPU or original → adjusted → restored timer settings. The real-page probe records timing and scroll geometry without reading messages or contacts.
+
+Validation included rebuilding both C probes with warnings treated as errors, recompiling the Python tools, and recomputing all nine saved summaries exactly from the original captures. Fresh end-to-end runs of the packaged reproducer again measured **10.00 CPU-path vs 59.53 AMD GPU draw callbacks/s**. The earlier real chat-list reversal was **10.00 → 58.60 → 10.07/s**. Original application settings were verified unchanged afterwards.
+
+The PR's scope is **diagnostics and evidence**. Production rendering/scheduling code is unchanged. The 8 ms fallback override is an experimental control, and the suspected CEF continuation/wakeup mechanism still needs a validated implementation fix. These results give maintainers a repeatable way to assess that fix while checking idle CPU use. The probes target Linux x86-64 / CEF 152.0.6; NVIDIA behavior and native-menu latency remain additional validation targets.
