@@ -19,6 +19,7 @@ mod i18n;
 mod ipc;
 mod notifications;
 mod paste;
+mod perf_probe;
 mod permissions_store;
 mod preferences;
 mod spellcheck;
@@ -105,6 +106,7 @@ fn main() -> Result<()> {
     if is_primary {
         cef_pump::stop();
         cef::shutdown();
+        perf_probe::flush();
     }
     std::process::exit(code);
 }

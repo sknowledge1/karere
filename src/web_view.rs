@@ -798,6 +798,7 @@ mod imp {
             self.parent_realize();
             let widget = self.obj();
             widget.make_current();
+            crate::perf_probe::observe_clock(&*widget);
             if let Some(err) = widget.error() {
                 // No GL context. GDK cannot produce one below GLES 3.0, which is
                 // all a Mali-400 (PinePhone, lima) offers, so this is terminal for
@@ -926,6 +927,7 @@ mod imp {
 
     impl GLAreaImpl for KarereWebView {
         fn render(&self, _ctx: &gtk::gdk::GLContext) -> glib::Propagation {
+            let _render_span = crate::perf_probe::Span::new("render", &[]);
             unsafe {
                 self.draw();
             }
@@ -1933,6 +1935,10 @@ mod imp {
                                 s.frame
                                     .damage
                                     .unwrap_or((0, 0, s.frame.width, s.frame.height));
+                            let _upload_span = crate::perf_probe::Span::new(
+                                "upload",
+                                &[x as i64, y as i64, w as i64, h as i64],
+                            );
                             if (x, y, w, h) != (0, 0, s.frame.width, s.frame.height) {
                                 gl::PixelStorei(gl::UNPACK_ROW_LENGTH, s.frame.width);
                                 gl::PixelStorei(gl::UNPACK_SKIP_PIXELS, x);
@@ -2418,6 +2424,16 @@ mod imp {
                 // Surface unit = pixel deltas (touchpad); Wheel unit = notch
                 // clicks (mouse). Scaled differently in send_wheel. (#161)
                 let precise = ctrl.unit() == gtk::gdk::ScrollUnit::Surface;
+                crate::perf_probe::record(
+                    "gtk-wheel",
+                    crate::perf_probe::now(),
+                    &[
+                        ctrl.current_event_time() as i64,
+                        (dx * 1000.0) as i64,
+                        (dy * 1000.0) as i64,
+                        precise as i64,
+                    ],
+                );
                 send_wheel(&widget, dx, dy, modifiers, precise);
                 glib::Propagation::Stop
             }
@@ -3245,6 +3261,17 @@ mod imp {
             modifiers,
         };
         with_host(widget, |host| {
+            crate::perf_probe::record(
+                "cef-wheel",
+                crate::perf_probe::now(),
+                &[
+                    ix as i64,
+                    iy as i64,
+                    event.x as i64,
+                    event.y as i64,
+                    s as i64,
+                ],
+            );
             host.send_mouse_wheel_event(Some(&event), ix as i32, iy as i32);
         });
     }

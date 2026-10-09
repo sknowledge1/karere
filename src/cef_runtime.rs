@@ -133,7 +133,9 @@ wrap_app! {
                 Some(&ozone.into()),
             );
             cmd.append_switch(Some(&"enable-webrtc-vea-vda".into()));
-            cmd.append_switch(Some(&"disable-smooth-scrolling".into()));
+            if std::env::var_os("KARERE_PROBE_ALLOW_SMOOTH_SCROLLING").is_none() {
+                cmd.append_switch(Some(&"disable-smooth-scrolling".into()));
+            }
             // M17 paste bridge: lets the renderer fetch tempfile payloads over
             // file:// (blocked from non-file origins by default). Reach is scoped
             // to $XDG_RUNTIME_DIR/karere/ by the resource request handler.

@@ -149,6 +149,11 @@ wrap_render_handler! {
                     }
                 }
             }
+            let damage = union_dirty(dirty_rects, width, height).unwrap_or((0, 0, width, height));
+            let _paint_span = crate::perf_probe::Span::new("paint", &[
+                width as i64, height as i64, damage.0 as i64, damage.1 as i64,
+                damage.2 as i64, damage.3 as i64,
+            ]);
             let len = (width as usize) * (height as usize) * 4;
             let slice = unsafe { std::slice::from_raw_parts(buffer, len) };
 
